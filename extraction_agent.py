@@ -41,14 +41,14 @@ def create_extraction_agent():
 
     functions = [Information]
 
-    #llm = ChatOpenAI(model="gpt-4o-mini", temperature = 0)
-    #llm_with_functions = llm.bind_functions(functions,function_call={"name":"Information"})
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature = 0)
+    llm_with_functions = llm.bind_functions(functions,function_call={"name":"Information"})
 
     # TO USE WITH MISTRAL
-    llm = ChatMistralAI(model="mistral-large-latest",temperature=0)
-    llm_with_functions = llm.bind_tools(functions)
+    #llm = ChatMistralAI(model="mistral-large-latest",temperature=0)
+    #llm_with_functions = llm.bind_tools(functions)
 
-    system_prompt = "Think carefully, detect ambiguity and then extract the products of the purchase order\
+    system_prompt = "Think carefully and then extract the products of the purchase order\
                      taking into account this catalogue: " + read_products("./data/Tarifas.xls") \
                      + "\n\n If there is ambiguity or you are not sure about the product or the amount of products, return nothing.\
                         Examples of ambiguity: \
@@ -61,10 +61,10 @@ def create_extraction_agent():
         ("user", "{input}")
         ])
     
-    #extraction_chain = prompt | llm_with_functions | JsonOutputFunctionsParser()
+    extraction_chain = prompt | llm_with_functions | JsonOutputFunctionsParser()
 
     # TO USE WITH MISTRAL
-    extraction_chain = prompt | llm_with_functions | PydanticToolsParser(tools=[Information])
+    #extraction_chain = prompt | llm_with_functions | PydanticToolsParser(tools=[Information])
     
     return extraction_chain
 
@@ -77,7 +77,7 @@ def main():
         purchase = input("Escribe tu pedido: ")
         result = agent.invoke({"input":purchase})
         print(result)
-
+        
 if __name__ == "__main__":
     main()
 
