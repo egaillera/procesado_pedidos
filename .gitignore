@@ -169,5 +169,6 @@ share/
 lib/
 etc/
 
-# Test databases
+# Test databasesn and data
 *.db
+data/
