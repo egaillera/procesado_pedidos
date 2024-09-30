@@ -2,7 +2,7 @@ import streamlit as st
 import random
 import time
 from streamlit_js_eval import streamlit_js_eval
-from extraction_agent import create_extraction_agent
+from extraction_agent import create_extraction_agent,read_products
 from langchain_community.callbacks import get_openai_callback
 
 
@@ -19,6 +19,7 @@ st.title("Jamón y Salud")
 if "messages" not in st.session_state:
     st.session_state.messages = []
     st.session_state.extraction_agent = create_extraction_agent()
+    catalogue, st.session_state.vectorstore = read_products("./data/Tarifas_por_familia_JyS.xls")
 
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
@@ -35,14 +36,19 @@ if prompt := st.chat_input("Introduce tu pedido: "):
 
     # Display assistant response in chat message container
     with st.chat_message("assistant"):
-        #response = st.write_stream(response_generator())
 
         with st.spinner("Procesando ..."):
 
-            response = st.session_state.extraction_agent.invoke({"input":prompt})
-            st.write(response)
+            result = st.session_state.extraction_agent.invoke({"input":prompt})
+            result_string = ""
+            for item in result['products']:
+                result_string += item["name"] + "\n"
+                similars = st.session_state.vectorstore.similarity_search_with_relevance_scores(item["name"],k=10)
+                for res,score in similars:
+                
+                    result_string += f"* [SIM={score:3f}] {res.page_content}" + "\n"
+            st.write(result_string)
             
 
-
         # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.messages.append({"role": "assistant", "content": result})
