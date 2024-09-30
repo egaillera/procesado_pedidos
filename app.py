@@ -42,11 +42,11 @@ if prompt := st.chat_input("Introduce tu pedido: "):
             result = st.session_state.extraction_agent.invoke({"input":prompt})
             result_string = ""
             for item in result['products']:
-                result_string += item["name"] + "\n"
+                result_string += "\n" + item["name"] + "\n"
                 similars = st.session_state.vectorstore.similarity_search_with_relevance_scores(item["name"],k=10)
                 for res,score in similars:
                 
-                    result_string += f"* [SIM={score:3f}] {res.page_content}" + "\n"
+                    result_string += f"- [SIM={score:3f}] {res.page_content}" + "\n"
             st.write(result_string)
             
 
