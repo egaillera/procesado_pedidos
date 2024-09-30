@@ -36,7 +36,7 @@ def create_extraction_agent():
         amount: int = Field(description="number of units of this product in the purchase order")
 
     class Information(BaseModel):
-        """Informatin to extract from the purchase order"""
+        """Information to extract from the purchase order"""
         products: List[Product] = Field(description="list of product of the purchase order")
 
     functions = [Information]
@@ -77,7 +77,7 @@ def main():
         purchase = input("Escribe tu pedido: ")
         result = agent.invoke({"input":purchase})
         print(result)
-        
+
 if __name__ == "__main__":
     main()
 
