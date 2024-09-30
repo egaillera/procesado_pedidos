@@ -1,3 +1,4 @@
+import json
 from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent, AgentType
 from langchain_openai import ChatOpenAI
@@ -5,24 +6,56 @@ from langchain_mistralai import ChatMistralAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
 from langchain_core.output_parsers import PydanticToolsParser
+from langchain_community.vectorstores import FAISS
+from langchain_openai.embeddings import OpenAIEmbeddings
 
 from pydantic import BaseModel, Field
 from typing import List
 import pandas as pd
 
+import os
+
 from dotenv import load_dotenv
+
+
+
+def create_vectorstore(texts):
+
+    embeddings = OpenAIEmbeddings()
+
+    if os.path.exists("./data/vectorstore.index"):
+        print("Loading vectorstore ... ")
+        vectorstore = FAISS.load_local("./data/vectorstore.index", embeddings,
+                                       allow_dangerous_deserialization=True)
+
+    else:
+        print("Creating vectorstore")
+        vectorstore = FAISS.from_texts(texts = texts, embedding=embeddings)
+        vectorstore.save_local("./data/vectorstore.index")
+
+    return vectorstore
+
 
 def read_products(excel_file):
 
-    catalogue = ""
+    catalogue = {}
 
     df = pd.read_excel(excel_file)
-    for index, row in df.iterrows():
-        catalogue = catalogue + f"Codigo: {format(row['Codigo'],'.0f')}, \
-                                Descripicion: {row['Descripcion']}, \
-                                Precio: {format(row['Precio'],'.2f')}" + "\n"
 
-    return catalogue
+    vectorstore = create_vectorstore(df["Descripcion"])
+
+    # Initialize the dictionary: one array of products per family
+    for family in df["Familia"].unique():
+        catalogue[family] = []
+
+
+    for index, row in df.iterrows():
+        catalogue[row['Familia']].append({"Articulo":row['Articulo'],
+                                          "Descripcion":row["Descripcion"], 
+                                          "Precio":format(row['Precio'],'.2f')})
+
+    json_string = json.dumps(catalogue,indent=4).replace("{", "{{").replace("}", "}}")
+    return json_string,vectorstore
 
 
 def create_extraction_agent():
@@ -31,8 +64,9 @@ def create_extraction_agent():
 
     class Product(BaseModel):
         """Information about a product"""
-        description: str = Field(description="descripcion del producto")
-        code: int = Field(description="codigo que identifica el producto")
+        name: str = Field(description="name used by the customer to refer this product")
+        #description: str = Field(description="product description accoding to catalogue")
+        #code: int = Field(description="code that identifies the producto")
         amount: int = Field(description="number of units of this product in the purchase order")
 
     class Information(BaseModel):
@@ -48,13 +82,16 @@ def create_extraction_agent():
     #llm = ChatMistralAI(model="mistral-large-latest",temperature=0)
     #llm_with_functions = llm.bind_tools(functions)
 
+    '''
     system_prompt = "Think carefully and then extract the products of the purchase order\
-                     taking into account this catalogue: " + read_products("./data/Tarifas.xls") \
+                     taking into account this JSON catalogue: " + read_products("./data/Tarifas_por_familia_JyS.xls") \
                      + "\n\n If there is ambiguity or you are not sure about the product or the amount of products, return nothing.\
                         Examples of ambiguity: \
                             quiero un tarro de pate (there are two kinds: PATE DE ATÚN 250 GRS and PATE IBERÍCO 250 GRS )\
                             quiero un loncheado de jamon (there are three: LONCHEADO 100 GR JAMON CURADO C, \
-                                                          LONCHEADO 100 GR JAMON DE CEBO IBERICO and LONCHEADO 100 GR JAMON RESERVA)"
+                                                          LONCHEADO 100 GR JAMON DE CEBO IBERICO and LONCHEADO 100 GR JAMON RESERVA)" '''
+    
+    system_prompt = "Think carefully and then extract the products of the purchase order, and the amount of each product"
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
@@ -71,12 +108,19 @@ def create_extraction_agent():
 def main():
     load_dotenv()
 
+    catalogue, vectorstore = read_products("./data/Tarifas_por_familia_JyS.xls")
+
     agent = create_extraction_agent()
 
     while True:
         purchase = input("Escribe tu pedido: ")
         result = agent.invoke({"input":purchase})
         print(result)
+        for item in result['products']:
+            print(item["name"])
+            similars = vectorstore.similarity_search_with_relevance_scores(item["name"],k=10)
+            for res,score in similars:
+                print(f"* [SIM={score:3f}] {res.page_content}")
 
 if __name__ == "__main__":
     main()
