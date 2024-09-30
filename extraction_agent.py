@@ -113,14 +113,19 @@ def main():
     agent = create_extraction_agent()
 
     while True:
+        result_string = ""
         purchase = input("Escribe tu pedido: ")
         result = agent.invoke({"input":purchase})
-        print(result)
+        #print(result)
         for item in result['products']:
-            print(item["name"])
+            #print(item["name"])
+            result_string += item["name"] + "\n"
             similars = vectorstore.similarity_search_with_relevance_scores(item["name"],k=10)
             for res,score in similars:
-                print(f"* [SIM={score:3f}] {res.page_content}")
+                #print(f"* [SIM={score:3f}] {res.page_content}")
+                result_string += f"* [SIM={score:3f}] {res.page_content}" + "\n"
+
+        print(result_string)
 
 if __name__ == "__main__":
     main()
