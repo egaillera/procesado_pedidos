@@ -19,7 +19,7 @@ st.title("Jamón y Salud")
 if "messages" not in st.session_state:
     st.session_state.messages = []
     st.session_state.extraction_agent = create_extraction_agent()
-    catalogue, st.session_state.vectorstore = read_products("./data/Tarifas_por_familia_JyS.xls")
+    
 
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
@@ -40,14 +40,7 @@ if prompt := st.chat_input("Introduce tu pedido: "):
         with st.spinner("Procesando ..."):
 
             result = st.session_state.extraction_agent.invoke({"input":prompt})
-            result_string = ""
-            for item in result['products']:
-                result_string += "\n" + item["name"] + "\n"
-                similars = st.session_state.vectorstore.similarity_search_with_relevance_scores(item["name"],k=10)
-                for res,score in similars:
-                
-                    result_string += f"- [SIM={score:3f}] {res.page_content}" + "\n"
-            st.write(result_string)
+            st.write(result)
             
 
         # Add assistant response to chat history
