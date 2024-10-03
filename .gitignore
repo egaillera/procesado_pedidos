@@ -172,3 +172,6 @@ etc/
 # Test databasesn and data
 *.db
 data/
+
+# Mac items
+.DS_Store
