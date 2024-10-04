@@ -18,10 +18,10 @@ import os
 from dotenv import load_dotenv
 
 categories = ["jamon","paleta","presa","chorizo", "morcilla","salchichon","avio","panceta",
-             "caldo","crema","pate","queso cabra","queso oveja","queso mezcla oveja y cabra",
+              "caldo","crema","pate","queso cabra","queso oveja","queso mezcla oveja y cabra",
             "miel","aceitunas","other"]
 
-qualities = ["bellota iberico","cebo iberido","cebo campo iberico","bellota iberica 100%",
+qualities = ["bellota iberico","cebo iberico","cebo campo iberico","bellota iberica 100%",
             "bellota iberica seleccion","100% iberico denominacion de origen","iberico",
             "leche cruda","leche cruda gran reserva","leche cruda ahumado","curado de extremadura serie plata",
             "curado de extremadura serie oro","york","iberico curado"]
