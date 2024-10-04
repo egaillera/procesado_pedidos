@@ -24,7 +24,7 @@ categories = ["jamon","paleta","presa","chorizo", "morcilla","salchichon","avio"
 qualities = ["bellota iberico","cebo iberido","cebo campo iberico","bellota iberica 100%",
             "bellota iberica seleccion","100% iberico denominacion de origen","iberico",
             "leche cruda","leche cruda gran reserva","leche cruda ahumado","curado de extremadura serie plata",
-            "curado de extremadura serie oro","york"]
+            "curado de extremadura serie oro","york","iberico curado"]
 
 weights = ["100 gramos","250 gramos","400 gramos","500 gramos","750 gramos","1 kilogramo", "2 kilogramos"]
 
