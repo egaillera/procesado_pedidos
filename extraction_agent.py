@@ -30,7 +30,7 @@ weights = ["100 gramos","250 gramos","400 gramos","500 gramos","750 gramos","1 k
 
 formats = ["loncheado","virutas","tarro","embuchado","doblado","cular","herradura","cortado","vela"]
 
-tastes = ["atun","finas hierbas","iberico","pimenton","corsevilla","sabor tradicional","picante","blanco","rojo"]
+tastes = ["atun","finas hierbas","iberico","pimenton","corsevilla","sabor tradicional","picante","blanco","rojo","vp"]
 
 path_to_catalog = "./data/CatalogoEstructurado.xlsx"
 
