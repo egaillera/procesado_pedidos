@@ -12,61 +12,48 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from pydantic import BaseModel, Field
 from typing import List,Optional, Literal, Set
 import pandas as pd
+import math
 
 import os
 
 from dotenv import load_dotenv
 
-categories = ["jamon","paleta","presa","chorizo", "morcilla","salchichon","avio","panceta",
-              "caldo","crema","pate","queso cabra","queso oveja","queso mezcla oveja y cabra",
-            "miel","aceitunas","other"]
-
-qualities = ["bellota iberico","cebo iberico","cebo campo iberico","bellota iberica 100%",
-            "bellota iberica seleccion","100% iberico denominacion de origen","iberico",
-            "leche cruda","leche cruda gran reserva","leche cruda ahumado","curado de extremadura serie plata",
-            "curado de extremadura serie oro","york","iberico curado"]
-
+# Features of products
+categories = []
+qualities = []
 weights = ["100 gramos","250 gramos","400 gramos","500 gramos","750 gramos","1 kilogramo", "2 kilogramos"]
+formats = []
+tastes = []
 
-formats = ["loncheado","virutas","tarro","embuchado","doblado","cular","herradura","cortado","vela"]
-
-tastes = ["atun","finas hierbas","iberico","pimenton","corsevilla","sabor tradicional","picante","blanco","rojo","vp"]
-
-path_to_catalog = "./data/CatalogoEstructurado.xlsx"
-
-
-
-
-def create_vectorstore(texts):
-
-    embeddings = OpenAIEmbeddings()
-
-    if os.path.exists("./data/vectorstore.index"):
-        print("Loading vectorstore ... ")
-        vectorstore = FAISS.load_local("./data/vectorstore.index", embeddings,
-                                       allow_dangerous_deserialization=True)
-
-    else:
-        print("Creating vectorstore")
-        vectorstore = FAISS.from_texts(texts = texts, embedding=embeddings)
-        vectorstore.save_local("./data/vectorstore.index")
-
-    return vectorstore
+path_to_catalog = "./CatalogoEstructurado.xlsx"
 
 
 def read_products(excel_file):
-
-    catalogue = {}
+    global categories
+    global qualities
+    global formats
+    global tastes
 
     df = pd.read_excel(excel_file)
 
-    return ";".join(list(df["DESCRIPCION"]))
+    # Convert to lowercase and avoid NaNs
+    categories = [c.lower() for c in list(set(df["TIPO"])) 
+                  if not (isinstance(c,float) and math.isnan(c))]
+    qualities = [q.lower() for q in list(set(df["CALIDAD"])) 
+                 if not (isinstance(q,float) and math.isnan(q))]
+    formats = [f.lower() for f in list(set(df["FORMATO"]))  
+               if not (isinstance(f,float) and math.isnan(f)) ]
+    tastes = [t.lower() for t in list(set(df["GUSTO"]))    
+              if not (isinstance(t,float) and math.isnan(t))]
 
+    return ";".join(list(df["DESCRIPCION"]))
 
 
 def create_extraction_agent():
 
     load_dotenv()
+
+    products_list = read_products(path_to_catalog)
 
     class Product(BaseModel):
         """Information about a product"""
@@ -76,7 +63,7 @@ def create_extraction_agent():
         quality: Optional[str] = Field(description="adjective that indicates quality of the product",
                                        examples=qualities)
         weight: Optional[str] = Field(description="Weight of the product", examples=weights)
-        format: Optional[Set[Literal[*formats]]] = Field(description="Format, which can describe both the type of product cut and the packaging", #type: ignore
+        format: Optional[str] = Field(description="Format, which can describe both the type of cut but also the packaging",
                                       examples=formats) 
         taste: Optional[str] = Field(description="What is the taste of the product",examples=tastes)
 
@@ -87,6 +74,7 @@ def create_extraction_agent():
 
     functions = [Information]
 
+    # TO USE WITH OPENAI
     llm = ChatOpenAI(model="gpt-4o-mini", temperature = 0)
     llm_with_functions = llm.bind_functions(functions,function_call={"name":"Information"})
 
@@ -95,29 +83,27 @@ def create_extraction_agent():
     #llm_with_functions = llm.bind_tools(functions)
 
     system_prompt = "Think carefully and then extract the list of products of the purchase order, \
-        taking into account this JSON catalogue: " + read_products(path_to_catalog)
+       taking into account this JSON catalogue: " + products_list
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "{input}")
         ])
     
+    # TO USE WITH OPENAI
     extraction_chain = prompt | llm_with_functions | JsonOutputFunctionsParser()
 
     # TO USE WITH MISTRAL
-    #extraction_chain = prompt | llm_with_functions | PydanticToolsParser(tools=[Information])
+    #extraction_chain = prompt | llm_with_functions | PydanticToolsParser(tools=[Information]) 
     
     return extraction_chain
 
 def main():
     load_dotenv()
 
-    #catalogue, vectorstore = read_products("./data/Tarifas_por_familia_JyS.xls")
-
     agent = create_extraction_agent()
 
     while True:
-        result_string = ""
         purchase = input("Escribe tu pedido: ")
         result = agent.invoke({"input":purchase})
         print(result)
