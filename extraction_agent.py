@@ -60,7 +60,7 @@ def create_extraction_agent():
         name_by_client: str = Field(description="name used by the customer to refer this product")
         amount: str = Field(description="number of units of this product in the purchase order. Could be 1/2 as well",examples=["1","1/2","2","3"])
         type: Literal[*categories] = Field(description="type of product", examples=categories) # type: ignore
-        quality: Optional[str] = Field(description="adjective that indicates quality of the product",
+        quality: Optional[str] = Field(description="Adjective that indicates quality of the product",
                                        examples=qualities)
         weight: Optional[str] = Field(description="Weight of the product", examples=weights)
         format: Literal[*formats] = Field(description="Format, which can describe both the type of cut but also the packaging") # type: ignore
@@ -81,8 +81,8 @@ def create_extraction_agent():
     #llm = ChatMistralAI(model="mistral-large-latest",temperature=0)
     #llm_with_functions = llm.bind_tools(functions)
 
-    system_prompt = "Think carefully and then extract the list of products of the purchase order, \
-       taking into account this JSON catalogue: " + products_list
+    system_prompt = "Think carefully and then extract the list of products and their atributes of the purchase order. \
+       IMPORTANT: only fill an attribute if you are sure. Take into account this list or products, separated by ';': " + products_list 
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
