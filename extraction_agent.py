@@ -39,6 +39,7 @@ def read_products(excel_file):
     # Convert to lowercase and avoid NaNs
     categories = [c.lower() for c in list(set(df["TIPO"])) 
                   if not (isinstance(c,float) and math.isnan(c))]
+    categories.append("other") # To avoid the "pizza" effect
     qualities = [q.lower() for q in list(set(df["CALIDAD"])) 
                  if not (isinstance(q,float) and math.isnan(q))]
     formats = [f.lower() for f in list(set(df["FORMATO"]))  
@@ -60,11 +61,10 @@ def create_extraction_agent():
         name_by_client: str = Field(description="name used by the customer to refer this product")
         amount: str = Field(description="number of units of this product in the purchase order. Could be 1/2 as well",examples=["1","1/2","2","3"])
         type: Literal[*categories] = Field(description="type of product", examples=categories) # type: ignore
-        quality: Optional[str] = Field(description="Adjective that indicates quality of the product",
-                                       examples=qualities)
+        quality: Literal[*qualities] = Field(description="Adjective that indicates quality of the product") # type: ignore
         weight: Optional[str] = Field(description="Weight of the product", examples=weights)
         format: Literal[*formats] = Field(description="Format, which can describe both the type of cut but also the packaging") # type: ignore
-        taste: Optional[str] = Field(description="What is the taste of the product",examples=tastes)
+        taste: Literal[*tastes] = Field(description="What is the taste of the product") # type: ignore
 
 
     class Information(BaseModel):
@@ -82,7 +82,8 @@ def create_extraction_agent():
     #llm_with_functions = llm.bind_tools(functions)
 
     system_prompt = "Think carefully and then extract the list of products and their atributes of the purchase order. \
-       IMPORTANT: only fill an attribute if you are sure. Take into account this list or products, separated by ';': " + products_list 
+       IMPORTANT: only fill an attribute if you are sure that belongs to the product."
+       # Take into account the following list of products, separated by ';': " + products_list 
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
