@@ -63,8 +63,7 @@ def create_extraction_agent():
         quality: Optional[str] = Field(description="adjective that indicates quality of the product",
                                        examples=qualities)
         weight: Optional[str] = Field(description="Weight of the product", examples=weights)
-        format: Optional[str] = Field(description="Format, which can describe both the type of cut but also the packaging",
-                                      examples=formats) 
+        format: Literal[*formats] = Field(description="Format, which can describe both the type of cut but also the packaging") # type: ignore
         taste: Optional[str] = Field(description="What is the taste of the product",examples=tastes)
 
 
