@@ -6,3 +6,11 @@
 5. Create an .env file with the OpenAI api key: ```OPENAI_API_KEY=sk-xxxxxxxxxxxxx```
 6. To run from the command line, execute ```python extraction_agent.py```
 7. To start the web interface, execute ```streamlit run app.py ```
+
+# To call from another python module
+
+```python
+from extraction_agent import execute_extractor
+
+print(execute_extractor("quiero jamon iberico de bellota"))
+```
