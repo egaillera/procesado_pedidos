@@ -3,6 +3,7 @@ import random
 import time
 from streamlit_js_eval import streamlit_js_eval
 from extraction_agent import create_extraction_agent,read_products
+from extraction_schema import get_examples
 from langchain_community.callbacks import get_openai_callback
 
 
@@ -39,7 +40,7 @@ if prompt := st.chat_input("Introduce tu pedido: "):
 
         with st.spinner("Procesando ..."):
 
-            result = st.session_state.extraction_agent.invoke({"input":prompt})
+            result = st.session_state.extraction_agent.invoke({"input":prompt,"examples":get_examples()})
             st.write(result)
             
 
