@@ -105,6 +105,16 @@ examples = [
                                       taste=None)]),
     ),
     (
+        "Quiero queso",
+        Information(products=[Product(name_by_client="queso",
+                                      amount="1",
+                                      type="queso oveja",
+                                      quality=None,
+                                      weight=None,
+                                      format=None,
+                                      taste=None)]),
+    ),
+    (
         "Quiero loncheado de salchichon",
         Information(products=[Product(name_by_client="loncheado de salchichon", 
                                     amount="1",
