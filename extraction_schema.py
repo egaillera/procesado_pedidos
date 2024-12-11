@@ -21,6 +21,7 @@ df = pd.read_excel(PATH_TO_CATALOG)
 categories = [c.lower() for c in list(set(df["TIPO"])) 
                 if not (isinstance(c,float) and math.isnan(c))]
 categories.append("other") # To avoid the "pizza" effect
+categories.append("queso") # It's not in the catalog, but makes sense
 qualities = [q.lower() for q in list(set(df["CALIDAD"])) 
                 if not (isinstance(q,float) and math.isnan(q))]
 weights = ["100 gramos","250 gramos","400 gramos","500 gramos",
